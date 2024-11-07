@@ -1,1 +1,1 @@
-# Mulitvariate Analtsis Group Project
+# Mulitvariate Analysis Group Project
