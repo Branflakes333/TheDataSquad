@@ -1,10 +1,20 @@
 ---
-title: "R Notebook"
+title: "**TheDataSquad -- Data Analysis**"
 output: pdf_document
 ---
 
-# TheDataSquad -- Data Analysis
 
-```{r setup}
-print("Hello World")
+```{r setup, message = FALSE, warning = FALSE, include = FALSE}
+library(ggplot2)
+library(dplyr)
+
+US = read.csv("../data/raw/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv")
+head(US)
 ```
+
+
+
+```{r}
+
+```
+
