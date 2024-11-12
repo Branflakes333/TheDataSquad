@@ -111,6 +111,6 @@ This study aims to analyze and compare housing markets between selected cities i
 
 * **Brandon Miner:** [email](brandonm333@outlook.com), [LinkedIn](linkedin.com/in/brandon-miner-3x3)
 * **Diego Angulo Nevarez:** [email](email@example.com), [LinkedIn](linkedin.com/in/diegoangulo) 
-* **Jihyun Do:** [email](jdo4550@sdsu.edu), [LinkedIn]:(linkedin.com/in/jihyundo)
+* **Jihyun Do:** [email](jdo4550@sdsu.edu), [LinkedIn](linkedin.com/in/jihyundo)
 * **Xinnan Li:** [email](email@example.com), [LinkedIn](linkedin.com/in/xinnanli)
 
