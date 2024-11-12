@@ -30,6 +30,6 @@ london$Price = london$Price * conversion2020
 
 Save processed dataset
 ```{r save_london}
-write.csv(x = london, file = "../data/processed/london_processed.csv")
+write.csv(x = london, file = "../data/processed/london_processed.csv", row.names = FALSE)
 ```
 
