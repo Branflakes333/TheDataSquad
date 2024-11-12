@@ -12,9 +12,24 @@ US = read.csv("../data/raw/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
 london = read.csv("../data/raw/london.csv")
 ```
 
+ ### London Dataset
+
+```{r overview}
+names(london)
+head(london)
+```
+
+Price is in Pounds, and therefore needs to be converted to USD. Will assume prices are from 2020
+
+```{r price_conversion}
+conversion2020 = 1.28 # 1 pound = $1.28
+
+london$Price = london$Price * conversion2020
+```
 
 
-```{r}
-
+Save processed dataset
+```{r save_london}
+write.csv(x = london, file = "../data/processed/london_processed.csv")
 ```
 
