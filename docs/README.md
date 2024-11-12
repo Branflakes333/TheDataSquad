@@ -109,8 +109,8 @@ This study aims to analyze and compare housing markets between selected cities i
 
   ### **IX. Contact Information**
 
-* **Brandon Miner:** Email: \[email@example.com\], LinkedIn: \[linkedin.com/in/brandonminer\]  
-* **Diego Angulo Nevarez:** Email: \[email@example.com\], LinkedIn: \[linkedin.com/in/diegoangulo\]  
-* **Jihyun Do:** Email: \[jdo4550@sdsu.edu\], LinkedIn: \[linkedin.com/in/jihyundo\]  
-* **Xinnan Li:** Email: \[email@example.com\], LinkedIn: \[linkedin.com/in/xinnanli\]
+* **Brandon Miner:** [email](brandonm333@outlook.com), [LinkedIn](linkedin.com/in/brandon-miner-3x3)
+* **Diego Angulo Nevarez:** [email](email@example.com), [LinkedIn](linkedin.com/in/diegoangulo) 
+* **Jihyun Do:** [email](jdo4550@sdsu.edu), [LinkedIn]:(linkedin.com/in/jihyundo)
+* **Xinnan Li:** [email](email@example.com), [LinkedIn](linkedin.com/in/xinnanli)
 
