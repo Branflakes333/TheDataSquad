@@ -5,31 +5,92 @@ output: pdf_document
 
 
 ```{r setup, message = FALSE, warning = FALSE, include = FALSE}
-library(ggplot2)
+knitr::opts_chunk$set(include = FALSE)
+
 library(dplyr)
+library(tidyr)
 
-US = read.csv("../data/raw/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv")
-london = read.csv("../data/raw/london.csv")
+# Data
+US2023 = read.csv("../data/raw/US_housing_2023.csv")
+london2024 = read.csv("../data/raw/london_housing_2024.csv")
 ```
 
- ### London Dataset
+```{r cleaning}
+##############
+# US Dataset #
+##############
 
-```{r overview}
-names(london)
-head(london)
+US2024 = US2023 |>
+  # Omit NA values
+  drop_na() |>
+  # Convert 2023 USD to 2024 USD (3.6% inflation rate)
+  mutate(across(c(MarketEstimate, RentEstimate, ListedPrice), ~ . * 1.036)) |>
+  # Convert Columns to proper data type
+  mutate(across(c(State, City, Street, Zipcode), as.character)) |>
+  mutate(across(c(Bedroom, Bathroom, Area, PPSq,
+                  LotArea, MarketEstimate,
+                  RentEstimate, Latitude, 
+                  Longitude, ListedPrice), as.numeric)) |>
+  # Normalize numeric columns
+  mutate(across(where(is.numeric) & !all_of(c("Latitude", "Longitude")), ~ scale(.)[, 1])) |>
+  rename(
+    Price = ListedPrice,
+    Bedrooms = Bedroom,
+    Bathrooms = Bathroom
+  )
+
+  
+##################
+# London Dataset #
+##################
+  
+london2024 = london2024 |>
+  # Omit NA values
+  drop_na() |>
+  # Convert 2024 Pounds to 2024 USD (1 pound = $1.27)
+  mutate(Price = Price * 1.27) |>
+  # Remove Index Column
+  select(-X) |>
+  # Rename columns to match US dataset
+  rename(
+    Area = Area.in.sq.ft,
+    Bedrooms = No..of.Bedrooms,
+    Bathrooms = No..of.Bathrooms,
+    Receptions = No..of.Receptions
+  ) |>
+  # Convert Columns to proper data type
+  mutate(across(c(Property.Name, House.Type, Location, City.County, Postal.Code), as.character)) |>
+  mutate(across(c(Price, Area, Bedrooms, Bathrooms, Receptions), as.numeric)) |>
+  # Normalize numeric columns
+  mutate(across(where(is.numeric), ~ scale(.)[, 1]))
+
+
+###############
+# US & London #
+###############
+US_London = US2024 |>
+  select(Price, Bedrooms, Bathrooms, Area) |>
+  mutate(location = "US")
+US_London = rbind(US_London, 
+                  london2024 |> 
+                    select(Price, Bedrooms, Bathrooms, Area) |> 
+                    mutate(location = "UK"))
+head(US_London)
 ```
 
-Price is in Pounds, and therefore needs to be converted to USD. Will assume prices are from 2020
+### Save CSVs
 
-```{r price_conversion}
-conversion2020 = 1.28 # 1 pound = $1.28
+Save processed data sets
 
-london$Price = london$Price * conversion2020
+```{r save_cleaned_data}
+write.csv(x = london2024, file = "../data/processed/London_clean.csv", row.names = FALSE)
+write.csv(x = US2024, file = "../data/processed/US_clean.csv", row.names = FALSE)
+write.csv(x = US_London, file = "../data/processed/US_London_clean.csv", row.names = FALSE)
 ```
 
 
-Save processed dataset
-```{r save_london}
-write.csv(x = london, file = "../data/processed/london_processed.csv", row.names = FALSE)
-```
+
+
+
+
 
