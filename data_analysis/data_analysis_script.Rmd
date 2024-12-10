@@ -5,16 +5,245 @@ output: pdf_document
 
 
 ```{r setup, message = FALSE, warning = FALSE, include = FALSE}
+# Libraries
 library(ggplot2)
 library(dplyr)
+library(pander)
+library(factoextra)
+library(cluster)
+library(dbscan)
+library(ggrepel)
+library(maps)
 
-US = read.csv("../data/raw/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv")
-head(US)
+# Imported Data Sets
+US = read.csv("../data/processed/US_clean.csv")
+London = read.csv("../data/processed/London_clean.csv")
+US_London = read.csv("../data/processed/US_London_clean.csv")
+
+# Numeric data
+London_numeric <- London |> select(Price, Bedrooms, Bathrooms, Area)
+US_numeric = US |> select(Price, Bedrooms, Bathrooms, Area)
+US_London_numeric = US_London[1:4]
+```
+
+### K-Means Cluster Analysis of US Housing
+
+```{r}
+# Perform k-means clustering
+
+set.seed(123)  # For reproducibility
+
+# Set the minimum/maximum number of clusters to test
+min_k <- 1
+max_k <- 10
+
+# Initialize an empty vector to store the total within sum of squares (TWSS)
+twss <- numeric((max_k-min_k+1))
+
+# Run k-means for each value of k and store the TWSS
+for (k in 1:(max_k-min_k+1)) {
+  kmeans_result <- kmeans(US |> 
+                            select(where(is.numeric) & !all_of(
+                              c("Latitude", "Longitude"))),
+                          centers = (k+min_k-1), nstart = 25)
+  twss[k] <- kmeans_result$tot.withinss
+}
+
+# Plot TWSS vs number of clusters
+plot(min_k:max_k, twss, type = "b", pch = 19, col = "blue",
+     xlab = "Number of Clusters",
+     ylab = "Total Within Sum of Squares (TWSS)",
+     main = "TWSS vs Number of Clusters")
+
+kmeans_result <- kmeans(US |> select(where(is.numeric)), centers = 3)
+
+# View clustering results
+fviz_cluster(kmeans_result, data = US |> select(where(is.numeric)),
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw(),
+             shape = 19
+             )
+
+US$cluster = kmeans_result$cluster
+
+# Get US map data
+us_map <- map_data("state")
+
+# Plot the map and points
+ggplot() +
+  # Add the US map
+  geom_polygon(data = us_map, aes(x = long, y = lat, group = group), fill = "lightgray", color = "white") +
+  # Add points (assuming 'US' is your dataset with Longitude, Latitude, and cluster columns)
+  geom_point(data = US, aes(x = Longitude, y = Latitude, color = as.factor(cluster))) +
+  # Add text labels for points in cluster 3 with Latitude < 30
+  geom_text_repel(
+    data = US |> filter(cluster == 3, Latitude < 30),
+    aes(x = Longitude, y = Latitude, label = City),
+    size = 3
+  ) +
+  # Add labels and formatting
+  labs(
+    x = "Longitude", y = "Latitude",
+    color = "Cluster",
+    caption = "Removed Alaska for clarity"
+  ) +
+  coord_fixed(1.3) + # Maintain aspect ratio
+  coord_cartesian(xlim = c(-130, -60), ylim = c(23, 53)) +
+  theme_minimal()
+
 ```
 
 
+```{r}
+sil <- silhouette(kmeans_result$cluster, dist(US_numeric))  # Compute silhouette
+plot(sil)  # Visualize the silhouette plot
+summary(sil)  # Get summary statistics of the silhouette
+```
+
+### Cluster Analysis of London on US k-means
 
 ```{r}
+res.km <- kmeans(US_London_numeric, centers = 3, iter.max = 20)
 
+fviz_cluster(res.km, 
+             data = US_London_numeric,
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw(),
+             shape = 19
+)
+```
+
+
+```{r}
+kmeans_result <- kmeans(US_numeric, centers = 3)
+
+# Cluster centers 
+c1 = kmeans_result$centers[1,]
+c2 = kmeans_result$centers[2,]
+c3 = kmeans_result$centers[3,]
+# Matrix of cluster centers
+c1_matrix = t(replicate(nrow(London_numeric), c1))
+c2_matrix = t(replicate(nrow(London_numeric), c2))
+c3_matrix = t(replicate(nrow(London_numeric), c3))
+# Matrices for difference of London data and cluster centers
+L1 = rowSums(abs(as.matrix(London_numeric[1:4]) - c1_matrix))
+L2 = rowSums(abs(as.matrix(London_numeric[1:4]) - c2_matrix))
+L3 = rowSums(abs(as.matrix(London_numeric[1:4]) - c3_matrix))
+
+# Create a data frame
+df <- data.frame(L1, L2, L3)
+
+# Add a new column 'MinSource' indicating which vector had the minimum value
+df$MinSource <- apply(df, 1, function(row) {
+  which.min(row)  # Returns the index of the minimum (1 for V1, 2 for V2, 3 for V3)
+})
+
+n = nrow(df)
+results = rbind(
+  paste0(formatC(sum(df$MinSource == 1) / n * 100, format = "f", digits = 3), "%"),
+  paste0(formatC(sum(df$MinSource == 2) / n * 100, format = "f", digits = 3), "%"),
+  paste0(formatC(sum(df$MinSource == 3) / n * 100, format = "f", digits = 3), "%")
+)
+rownames(results) = c("Cluster 1", "Cluster 2", "Cluster 3")
+# Print the percentage table using pander
+pander(results)
+```
+
+```{r}
+London = London |>
+  mutate(
+    cluster = as.factor(df$MinSource),
+    Location = "London"
+  )
+US = US |>
+  mutate(
+    cluster = as.factor(kmeans_result$cluster),
+    Location = "US"
+  )
+
+ggplot(mapping = aes(x = Bedrooms, y = Bathrooms, color = cluster, shape = Location)) +
+  geom_point(data = US) +
+  geom_point(data = London)
+
+ggplot(mapping = aes(x = Bedrooms, y = Area, color = cluster, shape = Location)) +
+  geom_point(data = US) +
+  geom_point(data = London)
+
+ggplot(mapping = aes(x = Bedrooms, y = Price, color = cluster, shape = Location)) +
+  geom_point(data = US) +
+  geom_point(data = London)
+
+ggplot(mapping = aes(x = Bathrooms, y = Area, color = cluster, shape = Location)) +
+  geom_point(data = US) +
+  geom_point(data = London)
+
+ggplot(mapping = aes(x = Bathrooms, y = Price, color = cluster, shape = Location)) +
+  geom_point(data = US) +
+  geom_point(data = London)
+
+ggplot(mapping = aes(x = Area, y = Price, color = cluster, shape = Location)) +
+  geom_point(data = US) +
+  geom_point(data = London)
+```
+
+
+### DBSCAN
+
+```{r}
+# Apply DBSCAN to your scaled data (remove the target variables if necessary)
+dbscan_result <- dbscan(US_numeric, eps = 0.5, minPts = 5)
+
+# Compute the k-nearest neighbors' distances
+kNNdist <- dbscan::kNNdist(US_numeric, k = 5)
+
+# Sort the distances
+kNNdist_sorted <- sort(kNNdist)
+
+# Plot the sorted k-distance
+plot(kNNdist_sorted, type = "l", main = "k-Distance Plot")
+
+# Assuming your data has columns named X and Y (adjust as necessary)
+US$cluster <- factor(dbscan_result$cluster)
+
+ggplot(US, aes(x = Longitude, y = Latitude, color = cluster)) +
+  geom_point() +
+  labs(title = "DBSCAN Clustering") +
+  theme_minimal()
+```
+
+```{r}
+# Apply DBSCAN to your scaled data (remove the target variables if necessary)
+dbscan_result <- dbscan(US_London_numeric, eps = 0.5, minPts = 5)
+
+# Compute the k-nearest neighbors' distances
+kNNdist <- dbscan::kNNdist(US_London_numeric, k = 5)
+
+# Sort the distances
+kNNdist_sorted <- sort(kNNdist)
+
+# Plot the sorted k-distance
+plot(kNNdist_sorted, type = "l", main = "k-Distance Plot")
+
+# Assuming your data has columns named X and Y (adjust as necessary)
+US_London$cluster <- factor(dbscan_result$cluster)
+```
+
+```{r}
+ggplot(US_London |> filter(cluster != 0), aes(x = Bedrooms, y = Price, color = cluster)) +
+  geom_point() +
+  labs(title = "DBSCAN Clustering") +
+  theme_minimal()
+
+ggplot(US_London |> filter(cluster != 0), aes(x = Bathrooms, y = Price, color = cluster)) +
+  geom_point() +
+  labs(title = "DBSCAN Clustering") +
+  theme_minimal()
+
+ggplot(US_London |> filter(cluster != 0), aes(x = Area, y = Price, color = cluster)) +
+  geom_point() +
+  labs(title = "DBSCAN Clustering") +
+  theme_minimal()
 ```
 
