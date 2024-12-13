@@ -115,6 +115,13 @@ fviz_cluster(res.km,
 )
 ```
 
+```{r}
+US_London$cluster = as.factor(res.km$cluster)
+
+ggplot(US_London, aes(x = Bedrooms, y = Bathrooms, shape = location, color = cluster)) +
+  geom_point()
+```
+
 
 ```{r}
 kmeans_result <- kmeans(US_numeric, centers = 3)
@@ -152,6 +159,8 @@ pander(results)
 ```
 
 ```{r}
+kmeans_result = kmeans(US_numeric, centers = 3)
+  
 London = London |>
   mutate(
     cluster = as.factor(df$MinSource),
@@ -164,28 +173,28 @@ US = US |>
   )
 
 ggplot(mapping = aes(x = Bedrooms, y = Bathrooms, color = cluster, shape = Location)) +
-  geom_point(data = US) +
-  geom_point(data = London)
+  geom_point(data = US, alpha = 0.5) +
+  geom_point(data = London, alpha = 0.5)
 
 ggplot(mapping = aes(x = Bedrooms, y = Area, color = cluster, shape = Location)) +
-  geom_point(data = US) +
-  geom_point(data = London)
+  geom_point(data = US, alpha = 0.5) +
+  geom_point(data = London, alpha = 0.5)
 
 ggplot(mapping = aes(x = Bedrooms, y = Price, color = cluster, shape = Location)) +
-  geom_point(data = US) +
-  geom_point(data = London)
+  geom_point(data = US, alpha = 0.5) +
+  geom_point(data = London, alpha = 0.5)
 
 ggplot(mapping = aes(x = Bathrooms, y = Area, color = cluster, shape = Location)) +
-  geom_point(data = US) +
-  geom_point(data = London)
+  geom_point(data = US, alpha = 0.5) +
+  geom_point(data = London, alpha = 0.5)
 
 ggplot(mapping = aes(x = Bathrooms, y = Price, color = cluster, shape = Location)) +
-  geom_point(data = US) +
-  geom_point(data = London)
+  geom_point(data = US, alpha = 0.5) +
+  geom_point(data = London, alpha = 0.5)
 
 ggplot(mapping = aes(x = Area, y = Price, color = cluster, shape = Location)) +
-  geom_point(data = US) +
-  geom_point(data = London)
+  geom_point(data = US, alpha = 0.5) +
+  geom_point(data = London, alpha = 0.5)
 ```
 
 

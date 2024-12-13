@@ -4,11 +4,14 @@ output: pdf_document
 ---
 
 ```{r setup, message = FALSE, warning = FALSE, include = FALSE}
+# Packages
 library(ggplot2)
 library(dplyr)
 
-US = read.csv("../../data/raw/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv")
-london = read.csv("../../data/raw/london.csv")
+# Imported Data Sets
+US = read.csv("../data/processed/US_clean.csv")
+London = read.csv("../data/processed/London_clean.csv")
+US_London = read.csv("../data/processed/US_London_clean.csv")
 ```
 
 ```{r features}
@@ -16,9 +19,36 @@ names(US)
 ```
 
 ```{r}
-hist(US$SizeRank)
+# Combine datasets with a new 'Location' column
+US_filtered <- US |> filter(Price < 10) |> mutate(Location = "US")
+London_filtered <- London |> filter(Price < 10) |> mutate(Location = "London")
+combined_data <- bind_rows(US_filtered, London_filtered)
+
+# Plot using ggplot
+ggplot(combined_data, aes(x = Price, fill = Location)) +
+  geom_histogram(aes(y = stat(density)), position = "identity", alpha = 0.5, bins = 30) +
+  labs(
+    y = "Frequency",
+    x = "Price (Standard Deviations)",
+    fill = "Legend"
+  ) +
+  scale_fill_manual(values = c(
+    "US" = "maroon",
+    "London" = "darkcyan"
+  )) +
+  theme_minimal()
 ```
 
+```{r}
+ggplot(combined_data, aes(x = Area, y = Price, color = Location)) +
+  geom_point(, position = "identity", alpha = 0.75) +
+  labs(
+    y = "Price",
+    x = "Area",
+    fill = "Legend"
+  ) +
+  theme_minimal()
+```
 
 
 

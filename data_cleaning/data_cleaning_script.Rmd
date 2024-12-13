@@ -12,7 +12,7 @@ library(tidyr)
 
 # Data
 US2023 = read.csv("../data/raw/US_housing_2023.csv")
-london2024 = read.csv("../data/raw/london_housing_2024.csv")
+london2020 = read.csv("../data/raw/london_housing_2024.csv")
 ```
 
 ```{r cleaning}
@@ -44,11 +44,12 @@ US2024 = US2023 |>
 # London Dataset #
 ##################
   
-london2024 = london2024 |>
+london2024 = london2020 |>
   # Omit NA values
   drop_na() |>
-  # Convert 2024 Pounds to 2024 USD (1 pound = $1.27)
-  mutate(Price = Price * 1.27) |>
+  # Convert 2020 Pounds to 2020 USD (1 pound = $1.28),
+  ## then 2020 USD to 2024 USD ($1 = $1.27)
+  mutate(Price = Price * 1.28 * 1.27) |>
   # Remove Index Column
   select(-X) |>
   # Rename columns to match US dataset
@@ -68,13 +69,14 @@ london2024 = london2024 |>
 ###############
 # US & London #
 ###############
-US_London = US2024 |>
-  select(Price, Bedrooms, Bathrooms, Area) |>
-  mutate(location = "US")
-US_London = rbind(US_London, 
-                  london2024 |> 
-                    select(Price, Bedrooms, Bathrooms, Area) |> 
-                    mutate(location = "UK"))
+US_London = rbind(
+  US2024 |>
+    select(Price, Bedrooms, Bathrooms, Area) |>
+    mutate(location = "US"), 
+  london2024 |> 
+    select(Price, Bedrooms, Bathrooms, Area) |> 
+    mutate(location = "UK")
+)
 head(US_London)
 ```
 
