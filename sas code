@@ -1,0 +1,86 @@
+data house;
+infile '/home/STAT 520/house.csv' dlm = ',' firstobs = 2;
+/* 
+	variable explanations in Kaggle;
+*/
+
+input price bedrooms bathrooms sqft_living sqft_lot floor conditions
+	  grade sqft_above sqft_basement zipcode lat long; 	  
+run;
+
+proc print data = house;
+run;
+
+/* group by bedrooms and bathrooms */
+proc means data = house maxdec = 3;
+class bedrooms bathrooms;
+var price bedrooms bathrooms sqft_living sqft_lot floor conditions
+	grade sqft_above sqft_basement; 
+run;
+
+
+/*
+proc means data = house;
+var price sqft_lot bathrooms sqft_living sqft_above;
+run;
+*/
+
+
+proc corr data = house;
+var price sqft_lot bathrooms sqft_living sqft_above;
+run;
+
+
+
+/*  
+	price is  correlated to the variable 'sqft_lot'
+
+	'sqft_lot': Total lot size in square feet 
+	
+	bathrooms,sqft_living,sqft_above are highly correlated to 'price' and 'sqft_lot'
+	
+	Let Y1 = price					continuous
+		Y2 = sqft_lot				continuous
+		
+		X1 = bathrooms
+		X2 = sqft_living
+		X3 = sqft_above
+ */
+
+
+
+
+/*
+proc sgscatter data = house;
+*y= price grade, x=sqft_living, group by conditions, show 3 plots;
+compare y=( price sqft_lot ) x=(sqft_living bathrooms sqft_above) /group = bedrooms markerattrs=(symbol="diamondFilled");
+run;
+*/
+
+
+/* 
+	H0: beta1 = beta2 = beta3 = 0
+	There is no linear association between 'price','sqft_lot' and 'bathrooms','sqft_living','sqft_above'
+	
+	this table tells us if we assume the number of bathrooms and living area above ground
+	level remains the same, then for every one square foot increase in the living area,
+	the price will increase by 282.37
+	
+	if we assume the two predictors, sqft_living and sqft_above, stay the same, then for
+	every one bathroom increase, the overall grade will increase by 0.17
+	
+	
+	
+	
+*/
+proc reg data = house;
+model price sqft_lot = bathrooms sqft_living sqft_above;
+mtest;
+quit;
+run;
+
+proc reg data = house;
+model price sqft_lot = bathrooms sqft_living sqft_above;
+mtest price - sqft_lot, sqft_living - sqft_above;
+quit;
+run;
